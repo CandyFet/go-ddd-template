@@ -37,6 +37,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
       - name: Build
         run: go build -v ./...
       - name: Set up environment
