@@ -1,0 +1,51 @@
+name: CI Pipeline
+
+on: [push]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  GO_VERSION: '1.24.4'
+
+jobs:
+  golangci:
+    name: Golang code linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Install go-cleanarch
+        run: go install github.com/roblaszczak/go-cleanarch@latest
+      - name: Run go-cleanarch
+        run: go-cleanarch
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+
+  go-tests:
+    name: Golang tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Build
+        run: go build -v ./...
+      - name: Set up environment
+        run: cp .env.example .env
+      - name: Run tests
+        run: ./scripts/test.sh service_name .test.env
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoTestsResults
+          path: GoTestsResults.txt
